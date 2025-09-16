@@ -25,8 +25,20 @@ namespace MvcMovies.Models
         [JsonPropertyName("Director")]
         public string? Director { get; set; }
         
+        [JsonPropertyName("Writer")]
+        public string? Writer { get; set; }
+        
+        [JsonPropertyName("Actors")]
+        public string? Actors { get; set; }
+        
         [JsonPropertyName("Plot")]
         public string? Plot { get; set; }
+        
+        [JsonPropertyName("Language")]
+        public string? Language { get; set; }
+        
+        [JsonPropertyName("Country")]
+        public string? Country { get; set; }
         
         [JsonPropertyName("Poster")]
         public string? Poster { get; set; }
@@ -36,5 +48,8 @@ namespace MvcMovies.Models
         
         [JsonPropertyName("imdbID")]
         public string? ImdbID { get; set; }
+        
+        [JsonPropertyName("Type")]
+        public string? Type { get; set; }
     }
 }

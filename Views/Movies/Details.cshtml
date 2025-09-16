@@ -1,0 +1,109 @@
+@model MvcMovies.Models.Movie
+
+@{
+    ViewData["Title"] = Model?.Title ?? "Movie Details";
+}
+
+@if (Model != null)
+{
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-4">
+                @if (!string.IsNullOrEmpty(Model.Poster) && Model.Poster != "N/A")
+                {
+                    <img src="@Model.Poster" alt="@Model.Title Poster" class="img-fluid rounded shadow">
+                }
+                else
+                {
+                    <div class="bg-light p-5 text-center">
+                        <p>No poster available</p>
+                    </div>
+                }
+            </div>
+            <div class="col-md-8">
+                <h1>@Model.Title <small class="text-muted">(@Model.Year)</small></h1>
+                
+                <div class="mb-3">
+                    @if (!string.IsNullOrEmpty(Model.ImdbRating) && Model.ImdbRating != "N/A")
+                    {
+                        <span class="badge bg-warning text-dark">IMDb @Model.ImdbRating/10</span>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Rated) && Model.Rated != "N/A")
+                    {
+                        <span class="badge bg-secondary">@Model.Rated</span>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Runtime) && Model.Runtime != "N/A")
+                    {
+                        <span class="text-muted">@Model.Runtime</span>
+                    }
+                </div>
+                
+                @if (!string.IsNullOrEmpty(Model.Plot) && Model.Plot != "N/A")
+                {
+                    <div class="mb-3">
+                        <h4>Plot</h4>
+                        <p>@Model.Plot</p>
+                    </div>
+                }
+                
+                <dl class="row">
+                    @if (!string.IsNullOrEmpty(Model.Director) && Model.Director != "N/A")
+                    {
+                        <dt class="col-sm-3">Director</dt>
+                        <dd class="col-sm-9">@Model.Director</dd>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.Writer) && Model.Writer != "N/A")
+                    {
+                        <dt class="col-sm-3">Writer</dt>
+                        <dd class="col-sm-9">@Model.Writer</dd>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.Actors) && Model.Actors != "N/A")
+                    {
+                        <dt class="col-sm-3">Actors</dt>
+                        <dd class="col-sm-9">@Model.Actors</dd>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.Genre) && Model.Genre != "N/A")
+                    {
+                        <dt class="col-sm-3">Genre</dt>
+                        <dd class="col-sm-9">@Model.Genre</dd>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.Released) && Model.Released != "N/A")
+                    {
+                        <dt class="col-sm-3">Released</dt>
+                        <dd class="col-sm-9">@Model.Released</dd>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.Language) && Model.Language != "N/A")
+                    {
+                        <dt class="col-sm-3">Language</dt>
+                        <dd class="col-sm-9">@Model.Language</dd>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.Country) && Model.Country != "N/A")
+                    {
+                        <dt class="col-sm-3">Country</dt>
+                        <dd class="col-sm-9">@Model.Country</dd>
+                    }
+                </dl>
+                
+                <div class="mt-4">
+                    <a href="https://www.imdb.com/title/@Model.ImdbID" target="_blank" class="btn btn-primary">
+                        View on IMDb
+                    </a>
+                    <a asp-action="Search" class="btn btn-outline-secondary">Back to Search</a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container mt-4">
+        <div class="alert alert-warning">Movie not found.</div>
+        <a asp-action="Search" class="btn btn-primary">Back to Search</a>
+    </div>
+}

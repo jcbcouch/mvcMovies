@@ -1,0 +1,49 @@
+@model MvcMovies.Models.SearchViewModel
+
+@{
+    ViewData["Title"] = "Search Movies";
+}
+
+<div class="container mt-4">
+    <h2>Search Movies</h2>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <form asp-action="Search" method="post">
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" placeholder="Search for a movie..." asp-for="SearchQuery" />
+                    <button class="btn btn-primary" type="submit">Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.SearchResults.Any())
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <h3>Search Results</h3>
+                <div class="list-group">
+                    @foreach (var movie in Model.SearchResults)
+                    {
+                        <a asp-action="Details" asp-route-id="@movie.ImdbID" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">@movie.Title</h5>
+                                <small>@movie.Year</small>
+                            </div>
+                            <p class="mb-1">@movie.Type</p>
+                            @if (!string.IsNullOrEmpty(movie.Poster) && movie.Poster != "N/A")
+                            {
+                                <img src="@movie.Poster" alt="@movie.Title Poster" style="max-height: 100px;" class="mt-2" />
+                            }
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(Model.SearchQuery))
+    {
+        <div class="alert alert-info mt-4">No movies found matching your search.</div>
+    }
+</div>
