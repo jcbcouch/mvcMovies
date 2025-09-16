@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Identity;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace MvcMovies.Models
 {
@@ -8,5 +10,9 @@ namespace MvcMovies.Models
         // Example:
         // public string FirstName { get; set; }
         // public string LastName { get; set; }
+        
+        // Navigation property for the lists this user owns
+        [ValidateNever]
+        public ICollection<MovieList> MovieLists { get; set; } = new List<MovieList>();
     }
 }

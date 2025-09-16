@@ -1,0 +1,48 @@
+@model IEnumerable<MvcMovies.Models.MovieList>
+
+@{
+    ViewData["Title"] = "My Movie Lists";
+}
+
+<h1>My Movie Lists</h1>
+<hr />
+
+<div class="mb-3">
+    <a asp-action="Create" class="btn btn-primary">Create New List</a>
+</div>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="alert alert-info">You don't have any movie lists yet. Create your first one!</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Created</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Title</td>
+                <td>@item.CreatedAt.ToLocalTime().ToString("g")</td>
+                <td>
+                    @if (item.IsPublic)
+                    {
+                        <span class="badge bg-success">Public</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Private</span>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
