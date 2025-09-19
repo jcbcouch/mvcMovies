@@ -96,6 +96,40 @@
                     </a>
                     <a asp-action="Search" class="btn btn-outline-secondary">Back to Search</a>
                 </div>
+
+                @if (User?.Identity?.IsAuthenticated == true)
+                {
+                    var lists = ViewBag.UserMovieLists as IEnumerable<MvcMovies.Models.MovieList>;
+                    if (lists != null && lists.Any())
+                    {
+                        <form asp-controller="MovieLists" asp-action="AddItem" method="post" class="mt-3">
+                            <input type="hidden" name="imdbId" value="@Model.ImdbID" />
+                            <div class="row g-2 align-items-center">
+                                <div class="col-auto">
+                                    <label for="movieListId" class="col-form-label">Add to list:</label>
+                                </div>
+                                <div class="col-auto">
+                                    <select id="movieListId" name="movieListId" class="form-select" required>
+                                        <option value="">Select a list...</option>
+                                        @foreach (var l in lists)
+                                        {
+                                            <option value="@l.Id">@l.Title</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-auto">
+                                    <button type="submit" class="btn btn-success">Add</button>
+                                </div>
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mt-3">
+                            You don't have any movie lists yet. <a asp-controller="MovieLists" asp-action="Create">Create one</a> to start adding movies.
+                        </div>
+                    }
+                }
             </div>
         </div>
     </div>

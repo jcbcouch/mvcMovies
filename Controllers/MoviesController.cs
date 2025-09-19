@@ -5,6 +5,10 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using MvcMovies.Data;
+using System.Linq;
 
 namespace MvcMovies.Controllers
 {
@@ -12,11 +16,15 @@ namespace MvcMovies.Controllers
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string _apiKey;
+        private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public MoviesController(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        public MoviesController(IHttpClientFactory httpClientFactory, IConfiguration configuration, ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _httpClientFactory = httpClientFactory;
             _apiKey = configuration["OmdbApi:ApiKey"];
+            _context = context;
+            _userManager = userManager;
         }
 
         public IActionResult Search()
@@ -72,6 +80,19 @@ namespace MvcMovies.Controllers
                 
                 if (movie != null)
                 {
+                    // If the user is authenticated, load their movie lists and pass to the view
+                    if (User?.Identity?.IsAuthenticated == true)
+                    {
+                        var userId = _userManager.GetUserId(User);
+                        var userLists = await _context.MovieLists
+                            .AsNoTracking()
+                            .Where(ml => ml.UserId == userId)
+                            .OrderByDescending(ml => ml.CreatedAt)
+                            .ToListAsync();
+
+                        ViewBag.UserMovieLists = userLists;
+                    }
+
                     return View(movie);
                 }
             }

@@ -1,0 +1,62 @@
+@model MvcMovies.Models.MovieListDetailsViewModel
+
+@{
+    ViewData["Title"] = Model?.Title ?? "Movie List";
+}
+
+@if (Model == null)
+{
+    <div class="container mt-4">
+        <div class="alert alert-warning">List not found.</div>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Home</a>
+    </div>
+}
+else
+{
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1 class="mb-0">@Model.Title</h1>
+            @if (!Model.IsPublic)
+            {
+                <span class="badge bg-secondary">Private</span>
+            }
+            else
+            {
+                <span class="badge bg-success">Public</span>
+            }
+        </div>
+
+        @if (Model.Movies != null && Model.Movies.Any())
+        {
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+                @foreach (var movie in Model.Movies)
+                {
+                    <div class="col">
+                        <div class="card h-100">
+                            @if (!string.IsNullOrEmpty(movie.Poster) && movie.Poster != "N/A")
+                            {
+                                <img src="@movie.Poster" class="card-img-top" alt="@movie.Title Poster" />
+                            }
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">@movie.Title</h5>
+                                <p class="card-text text-muted">@movie.Year</p>
+                                <div class="mt-auto d-flex gap-2">
+                                    <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.ImdbID" class="btn btn-sm btn-outline-primary">Details</a>
+                                    <a href="https://www.imdb.com/title/@movie.ImdbID" target="_blank" class="btn btn-sm btn-primary">IMDb</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info">There are no movies in this list yet.</div>
+        }
+
+        <div class="mt-4">
+            <a asp-action="MyLists" class="btn btn-outline-secondary">Back to My Lists</a>
+        </div>
+    </div>
+}
