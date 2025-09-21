@@ -1,41 +1,24 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using MvcMovies.Models;
 using System.Diagnostics;
-using System.Net.Http;
-using System.Text.Json;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using MvcMovies.Models;
+using MvcMovies.Services;
 
 namespace MvcMovies.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly IHttpClientFactory _httpClientFactory;
-        private readonly string _apiKey;
+        private readonly IMovieCacheService _movieCache;
 
-        public HomeController(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        public HomeController(IMovieCacheService movieCache)
         {
-            _httpClientFactory = httpClientFactory;
-            _apiKey = configuration["OmdbApi:ApiKey"];
+            _movieCache = movieCache;
         }
 
         public async Task<IActionResult> Index()
         {
-            var httpClient = _httpClientFactory.CreateClient();
-            var response = await httpClient.GetAsync($"https://www.omdbapi.com/?i=tt28996126&apikey={_apiKey}");
-            
-            if (response.IsSuccessStatusCode)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                var movie = JsonSerializer.Deserialize<Movie>(content, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-                
-                return View(movie);
-            }
-            
-            return View(new Movie());
+            const string defaultMovieId = "tt28996126";
+            var movie = await _movieCache.GetOrAddMovieAsync(defaultMovieId);
+            return View(movie);
         }
 
         public IActionResult Privacy()

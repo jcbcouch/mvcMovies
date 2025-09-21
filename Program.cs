@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using MvcMovies.Data;
 using Microsoft.AspNetCore.Identity;
 using MvcMovies.Models;
+using MvcMovies.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,9 @@ builder.Services.AddHttpClient(); // Add this line to register IHttpClientFactor
 // Add DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Register MovieCacheService
+builder.Services.AddScoped<IMovieCacheService, MovieCacheService>();
 
 // Add Identity services
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => 

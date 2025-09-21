@@ -13,6 +13,7 @@ namespace MvcMovies.Data
 
         public DbSet<MovieList> MovieLists { get; set; }
         public DbSet<MovieListItem> MovieListItems { get; set; }
+        public DbSet<MovieStore> Movies { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -36,6 +37,10 @@ namespace MvcMovies.Data
                 .WithMany(ml => ml.MovieListItems)
                 .HasForeignKey(mli => mli.MovieListId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure MovieStore to use ImdbID as primary key
+            builder.Entity<MovieStore>()
+                .HasKey(m => m.ImdbID);
         }
     }
 }
