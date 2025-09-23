@@ -108,6 +108,57 @@ namespace MvcMovies.Controllers
 
             return View(movie);
         }
+
+        public async Task<IActionResult> Random()
+        {
+            // Get a random movie from the database
+            var randomMovie = await _context.Movies
+                .OrderBy(m => Guid.NewGuid())
+                .FirstOrDefaultAsync();
+
+            if (randomMovie == null)
+            {
+                // If no movies in the database, redirect to search or show a message
+                TempData["ErrorMessage"] = "No movies found in the database. Try searching for some movies first.";
+                return RedirectToAction(nameof(Search));
+            }
+
+            // Map MovieStore to Movie
+            var movie = new Movie
+            {
+                Title = randomMovie.Title,
+                Year = randomMovie.Year,
+                Rated = randomMovie.Rated,
+                Released = randomMovie.Released,
+                Runtime = randomMovie.Runtime,
+                Genre = randomMovie.Genre,
+                Director = randomMovie.Director,
+                Writer = randomMovie.Writer,
+                Actors = randomMovie.Actors,
+                Plot = randomMovie.Plot,
+                Language = randomMovie.Language,
+                Country = randomMovie.Country,
+                Poster = randomMovie.Poster,
+                ImdbRating = randomMovie.ImdbRating,
+                ImdbID = randomMovie.ImdbID,
+                Type = randomMovie.Type
+            };
+
+            // If the user is authenticated, load their movie lists and pass to the view
+            if (User?.Identity?.IsAuthenticated == true)
+            {
+                var userId = _userManager.GetUserId(User);
+                var userLists = await _context.MovieLists
+                    .AsNoTracking()
+                    .Where(ml => ml.UserId == userId)
+                    .OrderByDescending(ml => ml.CreatedAt)
+                    .ToListAsync();
+
+                ViewBag.UserMovieLists = userLists;
+            }
+
+            return View("Details", movie);
+        }
     }
 
     public class OmdbSearchResult

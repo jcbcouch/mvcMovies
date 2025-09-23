@@ -56,7 +56,14 @@ else
         }
 
         <div class="mt-4">
-            <a asp-action="MyLists" class="btn btn-outline-secondary">Back to My Lists</a>
+            @if (Model.Referrer == "public")
+            {
+                <a asp-action="Public" class="btn btn-outline-secondary">Back to Public Lists</a>
+            }
+            else
+            {
+                <a asp-action="MyLists" class="btn btn-outline-secondary">Back to My Lists</a>
+            }
         </div>
     </div>
 }

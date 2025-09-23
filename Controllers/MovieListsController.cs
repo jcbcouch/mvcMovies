@@ -12,6 +12,7 @@ using System.Net.Http;
 using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 using System;
+using MvcMovies.Services;
 
 namespace MvcMovies.Controllers
 {
@@ -23,14 +24,22 @@ namespace MvcMovies.Controllers
         private readonly ILogger<MovieListsController> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string _apiKey;
+        private readonly IMovieCacheService _movieCache;
 
-        public MovieListsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, ILogger<MovieListsController> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        public MovieListsController(
+            ApplicationDbContext context, 
+            UserManager<ApplicationUser> userManager, 
+            ILogger<MovieListsController> logger, 
+            IHttpClientFactory httpClientFactory, 
+            IConfiguration configuration,
+            IMovieCacheService movieCache)
         {
             _context = context;
             _userManager = userManager;
             _logger = logger;
             _httpClientFactory = httpClientFactory;
             _apiKey = configuration["OmdbApi:ApiKey"];
+            _movieCache = movieCache;
         }
 
         // GET: /MovieLists/Create
@@ -78,17 +87,41 @@ namespace MvcMovies.Controllers
             return View(lists);
         }
 
-        // GET: /MovieLists/Public - optional: show public lists from all users
+        // GET: /MovieLists/Public - show public lists from all users with item counts and user info
         [AllowAnonymous]
         public async Task<IActionResult> Public()
         {
             var lists = await _context.MovieLists
                 .AsNoTracking()
                 .Where(ml => ml.IsPublic)
+                .Include(ml => ml.User)  // Include the User navigation property
+                .Include(ml => ml.MovieListItems) // Include the MovieListItems to count them
                 .OrderByDescending(ml => ml.CreatedAt)
+                .Select(ml => new 
+                {
+                    ml.Id,
+                    ml.Title,
+                    ml.IsPublic,
+                    ml.CreatedAt,
+                    ml.UserId,
+                    UserName = ml.User.UserName,
+                    ItemCount = ml.MovieListItems.Count
+                })
                 .ToListAsync();
 
-            return View(lists);
+            // Map to the view model
+            var viewModel = lists.Select(l => new MovieList
+            {
+                Id = l.Id,
+                Title = l.Title,
+                IsPublic = l.IsPublic,
+                CreatedAt = l.CreatedAt,
+                UserId = l.UserId,
+                User = new ApplicationUser { UserName = l.UserName },
+                MovieListItems = new List<MovieListItem>(new MovieListItem[l.ItemCount])
+            }).ToList();
+
+            return View(viewModel);
         }
 
         // POST: /MovieLists/AddItem
@@ -140,7 +173,7 @@ namespace MvcMovies.Controllers
 
         // GET: /MovieLists/Details/{id} - show all movies in a particular list
         [AllowAnonymous]
-        public async Task<IActionResult> Details(int id)
+        public async Task<IActionResult> Details(int id, string referrer = "mylists")
         {
             var list = await _context.MovieLists.AsNoTracking().FirstOrDefaultAsync(ml => ml.Id == id);
             if (list == null)
@@ -164,30 +197,12 @@ namespace MvcMovies.Controllers
             var movies = new List<Movie>();
             if (items.Count > 0)
             {
-                var client = _httpClientFactory.CreateClient();
                 foreach (var item in items)
                 {
-                    try
+                    var movie = await _movieCache.GetOrAddMovieAsync(item.ImdbID);
+                    if (movie != null)
                     {
-                        var resp = await client.GetAsync($"https://www.omdbapi.com/?i={item.ImdbID}&apikey={_apiKey}");
-                        if (resp.IsSuccessStatusCode)
-                        {
-                            var content = await resp.Content.ReadAsStringAsync();
-                            using var doc = JsonDocument.Parse(content);
-                            if (doc.RootElement.TryGetProperty("Response", out var respProp) && string.Equals(respProp.GetString(), "False", StringComparison.OrdinalIgnoreCase))
-                            {
-                                continue; // skip items OMDb did not find
-                            }
-                            var movie = JsonSerializer.Deserialize<Movie>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                            if (movie != null)
-                            {
-                                movies.Add(movie);
-                            }
-                        }
-                    }
-                    catch
-                    {
-                        // swallow individual item errors to keep the page functional
+                        movies.Add(movie);
                     }
                 }
             }
@@ -197,7 +212,8 @@ namespace MvcMovies.Controllers
                 ListId = list.Id,
                 Title = list.Title,
                 IsPublic = list.IsPublic,
-                Movies = movies
+                Movies = movies,
+                Referrer = referrer
             };
 
             return View(vm);
