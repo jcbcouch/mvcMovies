@@ -1,14 +1,17 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - MvcMovies</title>
-    <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/MvcMovies.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    @RenderSection("Styles", required: false)
 </head>
 <body>
     <header>
@@ -40,7 +43,12 @@
                         </div>
                     </div>
                     <ul class="navbar-nav">
-                        @if (User.Identity.IsAuthenticated)
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-controller="Movies" asp-action="TopRated" title="Top Rated Movies">
+                                <i class="bi bi-trophy"></i> Top Rated
+                            </a>
+                        </li>
+                        @if (SignInManager.IsSignedIn(User))
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="MovieLists" asp-action="MyLists" title="My Movie Lists">
@@ -58,10 +66,10 @@
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Login">Login</a>
+                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Register">Register</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Register">Register</a>
+                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Login</a>
                             </li>
                         }
                     </ul>
@@ -80,66 +88,9 @@
             &copy; @DateTime.Now.Year - MvcMovies
         </div>
     </footer>
-    <div id="toastContainer" aria-live="polite" aria-atomic="true" class="position-relative"></div>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    <script>
-        // Show toast notification if there's a message in TempData
-        document.addEventListener('DOMContentLoaded', function() {
-            const message = '@(TempData["Message"])';
-            const messageType = '@(TempData["MessageType"] ?? "info")';
-            if (message) {
-                showToast(message, messageType);
-            }
-        });
-
-        function showToast(message, type = 'info') {
-            const toastId = 'toast-' + Math.random().toString(36).substr(2, 9);
-            const iconMap = {
-                'success': 'bi-check-circle-fill',
-                'danger': 'bi-exclamation-triangle-fill',
-                'warning': 'bi-exclamation-triangle-fill',
-                'info': 'bi-info-circle-fill'
-            };
-            
-            const icon = iconMap[type] || 'bi-info-circle-fill';
-            
-            const toastHtml = `
-                <div id="${toastId}" class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="toast-header bg-${type} text-white">
-                        <i class="bi ${icon} me-2"></i>
-                        <strong class="me-auto">${type.charAt(0).toUpperCase() + type.slice(1)}</strong>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-                    </div>
-                    <div class="toast-body">
-                        ${message}
-                    </div>
-                </div>
-            `;
-            
-            const container = document.getElementById('toastContainer');
-            container.insertAdjacentHTML('beforeend', toastHtml);
-            
-            // Auto-remove the toast after 5 seconds
-            const toast = document.getElementById(toastId);
-            if (toast) {
-                // Initialize Bootstrap toast
-                const bsToast = new bootstrap.Toast(toast, {
-                    autohide: true,
-                    delay: 5000
-                });
-                
-                // Show the toast
-                bsToast.show();
-                
-                // Remove from DOM after hide
-                toast.addEventListener('hidden.bs.toast', function() {
-                    toast.remove();
-                });
-            }
-        }
-    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

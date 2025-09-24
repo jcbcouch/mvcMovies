@@ -60,5 +60,12 @@ namespace MvcMovies.Models
         // Timestamp for concurrency control
         [Timestamp]
         public byte[]? RowVersion { get; set; }
+        
+        // Navigation property for ratings
+        public ICollection<MovieRating> Ratings { get; set; } = new List<MovieRating>();
+        
+        // Computed property for average rating
+        [NotMapped]
+        public double? AverageRating => Ratings?.Count > 0 ? Ratings.Average(r => r.Rating) : null;
     }
 }

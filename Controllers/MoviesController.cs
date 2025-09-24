@@ -1,15 +1,18 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using MvcMovies.Models;
-using MvcMovies.Data;
-using MvcMovies.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using System.Net.Http;
+using MvcMovies.Data;
+using MvcMovies.Models;
+using MvcMovies.Models.ViewModels;
+using MvcMovies.Services;
 
 namespace MvcMovies.Controllers
 {
@@ -93,10 +96,18 @@ namespace MvcMovies.Controllers
                 return NotFound();
             }
 
-            // If the user is authenticated, load their movie lists and pass to the view
+            var viewModel = new MovieDetailsViewModel
+            {
+                Movie = movie,
+                UserRating = null
+            };
+
+            // If the user is authenticated, load their movie lists and check for existing rating
             if (User?.Identity?.IsAuthenticated == true)
             {
                 var userId = _userManager.GetUserId(User);
+                
+                // Load user's movie lists
                 var userLists = await _context.MovieLists
                     .AsNoTracking()
                     .Where(ml => ml.UserId == userId)
@@ -104,9 +115,56 @@ namespace MvcMovies.Controllers
                     .ToListAsync();
 
                 ViewBag.UserMovieLists = userLists;
+
+                // Check if user has already rated this movie
+                var existingRating = await _context.MovieRatings
+                    .FirstOrDefaultAsync(r => r.MovieId == id && r.UserId == userId);
+
+                if (existingRating != null)
+                {
+                    viewModel.UserRating = existingRating.Rating;
+                }
             }
 
-            return View(movie);
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RateMovie(string movieId, int rating)
+        {
+            if (string.IsNullOrWhiteSpace(movieId) || rating < 1 || rating > 10)
+            {
+                return BadRequest("Invalid rating data");
+            }
+
+            var userId = _userManager.GetUserId(User);
+            var existingRating = await _context.MovieRatings
+                .FirstOrDefaultAsync(r => r.MovieId == movieId && r.UserId == userId);
+
+            if (existingRating != null)
+            {
+                // Update existing rating
+                existingRating.Rating = rating;
+                existingRating.UpdatedAt = DateTime.UtcNow;
+                _context.MovieRatings.Update(existingRating);
+            }
+            else
+            {
+                // Create new rating
+                var movieRating = new MovieRating
+                {
+                    MovieId = movieId,
+                    UserId = userId,
+                    Rating = rating,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.MovieRatings.Add(movieRating);
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Details", new { id = movieId });
         }
 
         public async Task<IActionResult> Random()
@@ -144,10 +202,18 @@ namespace MvcMovies.Controllers
                 Type = randomMovie.Type
             };
 
-            // If the user is authenticated, load their movie lists and pass to the view
+            var viewModel = new MovieDetailsViewModel
+            {
+                Movie = movie,
+                UserRating = null
+            };
+
+            // If the user is authenticated, load their movie lists and check for existing rating
             if (User?.Identity?.IsAuthenticated == true)
             {
                 var userId = _userManager.GetUserId(User);
+                
+                // Load user's movie lists
                 var userLists = await _context.MovieLists
                     .AsNoTracking()
                     .Where(ml => ml.UserId == userId)
@@ -155,10 +221,70 @@ namespace MvcMovies.Controllers
                     .ToListAsync();
 
                 ViewBag.UserMovieLists = userLists;
+
+                // Check if user has already rated this movie
+                var existingRating = await _context.MovieRatings
+                    .FirstOrDefaultAsync(r => r.MovieId == movie.ImdbID && r.UserId == userId);
+
+                if (existingRating != null)
+                {
+                    viewModel.UserRating = existingRating.Rating;
+                }
             }
 
-            return View("Details", movie);
+            return View("Details", viewModel);
         }
+
+        public async Task<IActionResult> TopRated()
+{
+    // Get movies with their average ratings where at least one user has rated
+    var topRatedMovies = await _context.MovieRatings
+        .GroupBy(r => r.MovieId)
+        .Select(g => new
+        {
+            MovieId = g.Key,
+            AverageRating = g.Average(r => r.Rating),
+            RatingCount = g.Count()
+        })
+        .OrderByDescending(x => x.AverageRating)
+        .ThenByDescending(x => x.RatingCount) // More ratings will break ties
+        .Take(100)
+        .Join(_context.Movies,
+            rating => rating.MovieId,
+            movieStore => movieStore.ImdbID,
+            (rating, movieStore) => new MovieRatingViewModel
+            {
+                Movie = new Movie
+                {
+                    Title = movieStore.Title,
+                    Year = movieStore.Year,
+                    Rated = movieStore.Rated,
+                    Released = movieStore.Released,
+                    Runtime = movieStore.Runtime,
+                    Genre = movieStore.Genre,
+                    Director = movieStore.Director,
+                    Writer = movieStore.Writer,
+                    Actors = movieStore.Actors,
+                    Plot = movieStore.Plot,
+                    Language = movieStore.Language,
+                    Country = movieStore.Country,
+                    Poster = movieStore.Poster,
+                    ImdbRating = movieStore.ImdbRating,
+                    ImdbID = movieStore.ImdbID,
+                    Type = movieStore.Type
+                },
+                AverageRating = Math.Round(rating.AverageRating, 1),
+                RatingCount = rating.RatingCount
+            })
+        .ToListAsync();
+
+    var viewModel = new TopRatedMoviesViewModel
+    {
+        TopRatedMovies = topRatedMovies
+    };
+
+    return View(viewModel);
+}
     }
 
     public class OmdbSearchResult

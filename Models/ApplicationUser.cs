@@ -14,5 +14,9 @@ namespace MvcMovies.Models
         // Navigation property for the lists this user owns
         [ValidateNever]
         public ICollection<MovieList> MovieLists { get; set; } = new List<MovieList>();
+        
+        // Navigation property for the ratings this user has given
+        [ValidateNever]
+        public ICollection<MovieRating> MovieRatings { get; set; } = new List<MovieRating>();
     }
 }

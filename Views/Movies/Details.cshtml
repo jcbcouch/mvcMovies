@@ -1,17 +1,17 @@
-@model MvcMovies.Models.Movie
+@model MvcMovies.Models.ViewModels.MovieDetailsViewModel
 
 @{
-    ViewData["Title"] = Model?.Title ?? "Movie Details";
+    ViewData["Title"] = Model?.Movie?.Title ?? "Movie Details";
 }
 
-@if (Model != null)
+@if (Model?.Movie != null)
 {
     <div class="container mt-4">
         <div class="row">
             <div class="col-md-4">
-                @if (!string.IsNullOrEmpty(Model.Poster) && Model.Poster != "N/A")
+                @if (!string.IsNullOrEmpty(Model.Movie.Poster) && Model.Movie.Poster != "N/A")
                 {
-                    <img src="@Model.Poster" alt="@Model.Title Poster" class="img-fluid rounded shadow">
+                    <img src="@Model.Movie.Poster" alt="@Model.Movie.Title Poster" class="img-fluid rounded shadow">
                 }
                 else
                 {
@@ -19,79 +19,102 @@
                         <p>No poster available</p>
                     </div>
                 }
+                
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <div class="mt-3">
+                        <h5>Your Rating</h5>
+                        @if (Model.UserRating.HasValue)
+                        {
+                            <div class="alert alert-info">
+                                You rated this movie: @Model.UserRating/10
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#ratingModal">
+                                Update Rating
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ratingModal">
+                                Rate This Movie
+                            </button>
+                        }
+                    </div>
+                }
             </div>
+            
             <div class="col-md-8">
-                <h1>@Model.Title <small class="text-muted">(@Model.Year)</small></h1>
+                <h1>@Model.Movie.Title <small class="text-muted">(@Model.Movie.Year)</small></h1>
                 
                 <div class="mb-3">
-                    @if (!string.IsNullOrEmpty(Model.ImdbRating) && Model.ImdbRating != "N/A")
+                    @if (!string.IsNullOrEmpty(Model.Movie.ImdbRating) && Model.Movie.ImdbRating != "N/A")
                     {
-                        <span class="badge bg-warning text-dark">IMDb @Model.ImdbRating/10</span>
+                        <span class="badge bg-warning text-dark">IMDb @Model.Movie.ImdbRating/10</span>
                     }
-                    @if (!string.IsNullOrEmpty(Model.Rated) && Model.Rated != "N/A")
+                    @if (!string.IsNullOrEmpty(Model.Movie.Rated) && Model.Movie.Rated != "N/A")
                     {
-                        <span class="badge bg-secondary">@Model.Rated</span>
+                        <span class="badge bg-secondary">@Model.Movie.Rated</span>
                     }
-                    @if (!string.IsNullOrEmpty(Model.Runtime) && Model.Runtime != "N/A")
+                    @if (!string.IsNullOrEmpty(Model.Movie.Runtime) && Model.Movie.Runtime != "N/A")
                     {
-                        <span class="text-muted">@Model.Runtime</span>
+                        <span class="text-muted">@Model.Movie.Runtime</span>
                     }
                 </div>
                 
-                @if (!string.IsNullOrEmpty(Model.Plot) && Model.Plot != "N/A")
+                @if (!string.IsNullOrEmpty(Model.Movie.Plot) && Model.Movie.Plot != "N/A")
                 {
                     <div class="mb-3">
                         <h4>Plot</h4>
-                        <p>@Model.Plot</p>
+                        <p>@Model.Movie.Plot</p>
                     </div>
                 }
                 
                 <dl class="row">
-                    @if (!string.IsNullOrEmpty(Model.Director) && Model.Director != "N/A")
+                    @if (!string.IsNullOrEmpty(Model.Movie.Director) && Model.Movie.Director != "N/A")
                     {
                         <dt class="col-sm-3">Director</dt>
-                        <dd class="col-sm-9">@Model.Director</dd>
+                        <dd class="col-sm-9">@Model.Movie.Director</dd>
                     }
                     
-                    @if (!string.IsNullOrEmpty(Model.Writer) && Model.Writer != "N/A")
+                    @if (!string.IsNullOrEmpty(Model.Movie.Writer) && Model.Movie.Writer != "N/A")
                     {
                         <dt class="col-sm-3">Writer</dt>
-                        <dd class="col-sm-9">@Model.Writer</dd>
+                        <dd class="col-sm-9">@Model.Movie.Writer</dd>
                     }
                     
-                    @if (!string.IsNullOrEmpty(Model.Actors) && Model.Actors != "N/A")
+                    @if (!string.IsNullOrEmpty(Model.Movie.Actors) && Model.Movie.Actors != "N/A")
                     {
                         <dt class="col-sm-3">Actors</dt>
-                        <dd class="col-sm-9">@Model.Actors</dd>
+                        <dd class="col-sm-9">@Model.Movie.Actors</dd>
                     }
                     
-                    @if (!string.IsNullOrEmpty(Model.Genre) && Model.Genre != "N/A")
+                    @if (!string.IsNullOrEmpty(Model.Movie.Genre) && Model.Movie.Genre != "N/A")
                     {
                         <dt class="col-sm-3">Genre</dt>
-                        <dd class="col-sm-9">@Model.Genre</dd>
+                        <dd class="col-sm-9">@Model.Movie.Genre</dd>
                     }
                     
-                    @if (!string.IsNullOrEmpty(Model.Released) && Model.Released != "N/A")
+                    @if (!string.IsNullOrEmpty(Model.Movie.Released) && Model.Movie.Released != "N/A")
                     {
                         <dt class="col-sm-3">Released</dt>
-                        <dd class="col-sm-9">@Model.Released</dd>
+                        <dd class="col-sm-9">@Model.Movie.Released</dd>
                     }
                     
-                    @if (!string.IsNullOrEmpty(Model.Language) && Model.Language != "N/A")
+                    @if (!string.IsNullOrEmpty(Model.Movie.Language) && Model.Movie.Language != "N/A")
                     {
                         <dt class="col-sm-3">Language</dt>
-                        <dd class="col-sm-9">@Model.Language</dd>
+                        <dd class="col-sm-9">@Model.Movie.Language</dd>
                     }
                     
-                    @if (!string.IsNullOrEmpty(Model.Country) && Model.Country != "N/A")
+                    @if (!string.IsNullOrEmpty(Model.Movie.Country) && Model.Movie.Country != "N/A")
                     {
                         <dt class="col-sm-3">Country</dt>
-                        <dd class="col-sm-9">@Model.Country</dd>
+                        <dd class="col-sm-9">@Model.Movie.Country</dd>
                     }
                 </dl>
                 
                 <div class="mt-4">
-                    <a href="https://www.imdb.com/title/@Model.ImdbID" target="_blank" class="btn btn-primary">
+                    <a href="https://www.imdb.com/title/@Model.Movie.ImdbID" target="_blank" class="btn btn-primary">
                         View on IMDb
                     </a>
                     <a asp-action="Search" class="btn btn-outline-secondary">Back to Search</a>
@@ -103,7 +126,7 @@
                     if (lists != null && lists.Any())
                     {
                         <form asp-controller="MovieLists" asp-action="AddItem" method="post" class="mt-3">
-                            <input type="hidden" name="imdbId" value="@Model.ImdbID" />
+                            <input type="hidden" name="imdbId" value="@Model.Movie.ImdbID" />
                             <div class="row g-2 align-items-center">
                                 <div class="col-auto">
                                     <label for="movieListId" class="col-form-label">Add to list:</label>
@@ -133,6 +156,31 @@
             </div>
         </div>
     </div>
+
+    <!-- Rating Modal -->
+    <div class="modal fade" id="ratingModal" tabindex="-1" aria-labelledby="ratingModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ratingModalLabel">Rate @Model.Movie.Title</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form asp-action="RateMovie" method="post">
+                    <div class="modal-body">
+                        <input type="hidden" name="movieId" value="@Model.Movie.ImdbID" />
+                        <div class="form-group">
+                            <label for="rating" class="form-label">Your Rating (1-10)</label>
+                            <input type="number" class="form-control" id="rating" name="rating" min="1" max="10" value="@(Model.UserRating ?? 5)" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Submit Rating</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 }
 else
 {
@@ -140,4 +188,14 @@ else
         <div class="alert alert-warning">Movie not found.</div>
         <a asp-action="Search" class="btn btn-primary">Back to Search</a>
     </div>
+}
+
+@section Scripts {
+    <script>
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    </script>
 }
